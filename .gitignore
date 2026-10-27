@@ -5,7 +5,6 @@ node_modules/
 npm-debug.*
 yarn-debug.*
 yarn-error.*
-package-lock.json
 yarn.lock
 
 # Expo
