@@ -1,79 +1,34 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { useTheme } from '@/context/ThemeContext';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Icon, type IconName } from '@/components/ui';
+import { useApp } from '@/context/AppContext';
+
+const TABS: { name: string; title: string; icon: IconName }[] = [
+  { name: 'index', title: 'Today', icon: 'today' },
+  { name: 'attendance', title: 'Attendance', icon: 'fact-check' },
+  { name: 'timetable', title: 'Timetable', icon: 'calendar-view-week' },
+  { name: 'deadlines', title: 'Deadlines', icon: 'assignment' },
+  { name: 'more', title: 'More', icon: 'grid-view' },
+];
 
 export default function TabLayout() {
-  const { colors, isDark } = useTheme();
-
+  const { colors } = useApp();
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopWidth: 0,
-          elevation: 0,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '500',
-        },
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        tabBarLabelStyle: { fontSize: 11, lineHeight: 14, fontWeight: '600' },
       }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={22} name={focused ? 'house.fill' : 'house'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="tasks"
-        options={{
-          title: 'Tasks',
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={22} name={focused ? 'checklist' : 'checklist'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="habits"
-        options={{
-          title: 'Habits',
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={22} name={focused ? 'repeat' : 'repeat'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="focus"
-        options={{
-          title: 'Focus',
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={22} name={focused ? 'timer' : 'timer'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={22} name={focused ? 'person.fill' : 'person'} color={color} />
-          ),
-        }}
-      />
+      {TABS.map((t) => (
+        <Tabs.Screen
+          key={t.name}
+          name={t.name}
+          options={{ title: t.title, tabBarIcon: ({ color }) => <Icon name={t.icon} size={24} color={color} /> }}
+        />
+      ))}
     </Tabs>
   );
 }

@@ -1,73 +1,49 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-import { useColorScheme } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ThemeProvider as CustomThemeProvider } from '@/context/ThemeContext';
 import { useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { format } from 'date-fns';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import 'react-native-reanimated';
+import { AppProvider, useApp } from '@/context/AppContext';
 
-export const unstable_settings = {
-  initialRouteName: '(tabs)',
-};
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-// Daily reset function - FIXED
-const checkDailyReset = async () => {
-  try {
-    const lastResetDate = await AsyncStorage.getItem('lastResetDate');
-    const today = format(new Date(), 'yyyy-MM-dd');
-    
-    if (lastResetDate !== today) {
-      console.log('Running daily reset...');
-      
-      // Reset daily task completion status - DELETE COMPLETED TASKS
-      const tasksJson = await AsyncStorage.getItem('tasks');
-      if (tasksJson) {
-        const tasks = JSON.parse(tasksJson);
-        // Keep only incomplete tasks (delete completed ones)
-        const incompleteTasks = tasks.filter((t: any) => !t.completed);
-        await AsyncStorage.setItem('tasks', JSON.stringify(incompleteTasks));
-        console.log(`Deleted ${tasks.length - incompleteTasks.length} completed tasks`);
-      }
-      
-      // Habits don't need reset - they track completion by date automatically
-      // The habit streak is calculated based on dates, so no action needed
-      
-      // Update last reset date
-      await AsyncStorage.setItem('lastResetDate', today);
-      console.log('Daily reset completed');
-    }
-  } catch (error) {
-    console.error('Error checking daily reset:', error);
-  }
-};
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function Navigator() {
+  const { ready, isDark, colors } = useApp();
 
   useEffect(() => {
-    checkDailyReset();
-  }, []);
+    if (ready) SplashScreen.hideAsync().catch(() => {});
+  }, [ready]);
+
+  const base = isDark ? DarkTheme : DefaultTheme;
+  const navTheme = {
+    ...base,
+    colors: { ...base.colors, background: colors.background, card: colors.surface, text: colors.text, primary: colors.primary, border: colors.border },
+  };
+
+  if (!ready) return null;
 
   return (
+    <ThemeProvider value={navTheme}>
+      <Stack screenOptions={{ headerShadowVisible: false, headerTintColor: colors.primary, headerTitleStyle: { color: colors.text } }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="subject/[id]" options={{ title: 'Subject' }} />
+        <Stack.Screen name="study" options={{ title: 'Study timer' }} />
+        <Stack.Screen name="cgpa" options={{ title: 'CGPA calculator' }} />
+        <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+      </Stack>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <CustomThemeProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen 
-              name="modal" 
-              options={{ 
-                presentation: 'modal',
-                title: 'Settings',
-              }} 
-            />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </CustomThemeProvider>
+      <AppProvider>
+        <Navigator />
+      </AppProvider>
     </GestureHandlerRootView>
   );
 }

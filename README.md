@@ -1,193 +1,107 @@
-## 📱 About LifeOS
+# Bunkmate
 
-LifeOS is a comprehensive productivity application designed to help you manage your daily tasks, build positive habits, track focus sessions, capture ideas, and gain insights into your productivity patterns. With a beautiful, modern UI and real-time synchronization, LifeOS is your companion for personal growth and productivity.
+**Attendance, timetable and deadlines for college students, in one app.**
 
-### ✨ Features
+Bunkmate answers the question every student asks before skipping a class: *can I afford to?* Mark each class with one tap and it tells you, per subject, exactly how many classes you can still skip, or how many in a row you need to attend to get back above your college's cutoff (75% by default).
 
-#### ✅ Task Management
-- Create, edit, and delete tasks with priority levels (High/Medium/Low)
-- Organize tasks by categories (Work, Personal, Shopping, Health, Other)
-- Filter tasks by status (Active/Completed/All) and categories
-- Swipe to edit or delete tasks
-- Real-time task completion tracking
+Everything stays on your phone. No account, no ads, works offline.
 
-#### 🔄 Habit Tracking
-- Build and track daily habits
-- Visual weekly calendar with habit completion tracking
-- Streak tracking (current and best streaks)
-- Color-coded habits with custom icons
-- Weekly progress charts
+<p>
+  <img src="docs/screenshots/today.png" width="200" alt="Today screen with classes to mark and overall attendance" />
+  <img src="docs/screenshots/attendance.png" width="200" alt="Attendance per subject with skip / attend verdicts" />
+  <img src="docs/screenshots/subject.png" width="200" alt="Subject detail with what-if planner" />
+  <img src="docs/screenshots/timetable.png" width="200" alt="Weekly timetable" />
+</p>
 
-#### 🎯 Focus Timer
-- Customizable timer (5, 15, 25, 45 minutes)
-- Animated timer with visual feedback
-- Session history tracking
-- Daily and weekly focus statistics
-- Focus tips to improve concentration
+## Features
 
-#### 💡 Idea Vault
-- Capture ideas, thoughts, and notes
-- Categorize ideas (Startup, Business, Thought, Note, Other)
-- Favorite important ideas
-- Share ideas with others
-- Edit and delete ideas
+**Attendance**
+- One tap per class: Present, Absent, OD (on duty / medical / sports leave) or Cancelled. Tap again to undo. Cancelled classes don't count.
+- **Holiday** and **All present** buttons mark the whole day in one tap, with undo.
+- **"Can I skip tomorrow?"** gives one answer for the whole day, with each subject's percentage after skipping.
+- A clear verdict for each subject, such as *"You can skip 3 classes"*, *"On the edge: don't skip the next class"* or *"Attend the next 4 classes to reach 75%"*.
+- **What-if planner:** see your percentage if you skip or attend the next *N* classes.
+- OD counts as present by default. You can switch it to "not counted" if your college treats it that way.
+- **Evening reminder** (5–9 PM) to mark the day's classes, skipped once everything is marked.
+- Per-subject target (50-100%), plus a starting count for when you begin mid-semester.
+- Mark yesterday's or older classes from the Today screen, add extra classes that aren't on the timetable, and see the full history with delete.
+- Percentages are floored, never rounded up, so 74.9% is never shown as 75%.
 
-#### 📊 Analytics & Insights
-- Real-time productivity score (Tasks + Focus)
-- Weekly habit completion charts
-- Daily focus time tracking
-- Tasks by priority visualization
-- Personalized productivity insights
+- **What-if planner:** see your percentage if you skip or attend the next *N* classes.
+- Per-subject target (50-100%), plus a starting count for when you begin mid-semester.
+- Mark yesterday's or older classes from the Today screen, add extra classes that aren't on the timetable, and see the full history with delete.
+- Percentages are floored, never rounded up, so 74.9% is never shown as 75%.
 
-#### 👤 Profile & Settings
-- View your productivity statistics
-- Export/Import data functionality
-- Clear all data option
-- Dark/Light mode support (coming soon)
+**Timetable**
+- Weekly schedule from Monday to Saturday (Sunday optional), with lectures, labs and tutorials, rooms and clash warnings.
+- Add the same class to several days at once.
+- **Reminders before every class** (5, 10, 15 or 30 minutes, or off).
 
-### 🚀 Quick Start
+**Deadlines**
+- Assignments, exams, quizzes, lab records and projects, tagged by subject.
+- Reminders a day before and an hour before.
+- Overdue, upcoming and completed sections. Nothing is ever auto-deleted.
 
-#### Prerequisites
-- Node.js (v18 or later)
-- npm or yarn
-- Expo Go app on your phone (iOS/Android)
+**More**
+- **Study timer** that keeps counting when the phone is locked and notifies you when it's done, plus a study log.
+- **CGPA calculator:** SGPA per semester and credit-weighted CGPA on the 10-point scale (O, A+, A, B+, B, C, P, F), or typed grade points.
+- **Backup:** export everything as text and import it on another phone.
+- Light, dark or match-phone theme.
 
-#### Installation
+## Run it
 
-1. **Clone the repository**
+You need Node.js 18 or newer and the **Expo Go** app on your phone.
+
 ```bash
-git clone https://github.com/yourusername/lifeos.git
-cd lifeos
-Install dependencies
-
-bash
+git clone https://github.com/Abhinav-836/Bunkmate.git
+cd Bunkmate
 npm install
-Start the development server
+npx expo start
+```
 
-bash
-npx expo start -c
-Run on your device
+Scan the QR code with Expo Go (Android) or the Camera app (iOS). Press `w` to open it in a browser instead. Reminders only work on a phone.
 
-Scan the QR code with Expo Go (Android)
+### Build an APK
 
-Scan the QR code with Camera app (iOS)
+```bash
+npm install -g eas-cli
+eas login
+eas build -p android --profile preview
+```
 
-Or press a for Android emulator, i for iOS simulator
+## Checks
 
-📁 Project Structure
-text
-lifeos/
-├── app/
-│   ├── (tabs)/
-│   │   ├── _layout.tsx          # Tab navigation
-│   │   ├── index.tsx            # Dashboard
-│   │   ├── tasks.tsx            # Tasks management
-│   │   ├── habits.tsx           # Habits tracking
-│   │   ├── focus.tsx            # Focus timer
-│   │   ├── ideas.tsx            # Idea vault
-│   │   ├── analytics.tsx        # Analytics & insights
-│   │   └── profile.tsx          # User profile
-│   ├── _layout.tsx              # Root layout
-│   └── modal.tsx                # Modal screen
-├── components/
-│   ├── ui/
-│   │   └── icon-symbol.tsx      # Icon mappings
-│   ├── ErrorBoundary.tsx        # Error handling
-│   └── Themed.tsx               # Themed components
-├── constants/
-│   └── theme.ts                 # Theme constants
-├── context/
-│   ├── ThemeContext.tsx         # Theme management
-│   └── NotificationContext.tsx  # Notifications
-├── hooks/
-│   └── useThemeColor.ts         # Theme color hook
-└── assets/                      # Images and sounds
-🎨 Tech Stack
-Technology	Purpose
-React Native	Mobile app framework
-Expo	Development platform
-TypeScript	Type safety
-React Navigation	Navigation
-AsyncStorage	Local data persistence
-Reanimated 3	Animations
-React Native Chart Kit	Data visualization
-date-fns	Date manipulation
-Expo Haptics	Haptic feedback
-Expo Router	File-based routing
-🔧 Available Scripts
-bash
-# Start development server
-npm start
-
-# Start on Android
-npm run android
-
-# Start on iOS
-npm run ios
-
-# Start on Web
-npm run web
-
-# Run linting
+```bash
+npm test           # attendance maths, CGPA and date logic
+npm run typecheck  # TypeScript
 npm run lint
+```
 
-# Reset project
-npm run reset-project
-📱 Key Features in Detail
-Productivity Score
-50% based on completed tasks
+## How the numbers are calculated
 
-50% based on focus time (up to 10 hours)
+With `a` classes attended out of `t` held and a target of `T`%:
 
-Real-time updates
+- **Classes you can skip:** the largest `k` with `a / (t + k) ≥ T%`, which is `floor((100a − T·t) / T)`.
+- **Classes you must attend:** the smallest `n` with `(a + n) / (t + n) ≥ T%`, which is `ceil((T·t − 100a) / (100 − T))`.
 
-Daily Reset
-Completed tasks are automatically cleaned up after 24 hours
+Both use whole-number maths, so results are exact at the cutoff. See [`lib/attendance.ts`](lib/attendance.ts) and its tests in [`lib/__tests__`](lib/__tests__).
 
-Keeps your task list fresh and manageable
+## Project structure
 
-Data Persistence
-All data is stored locally using AsyncStorage
+```
+app/
+  (tabs)/            Today, Attendance, Timetable, Deadlines, More
+  subject/[id].tsx   Subject detail, what-if planner, history
+  study.tsx          Study timer
+  cgpa.tsx           CGPA calculator
+  settings.tsx       Reminders, target, theme, backup
+components/          Shared UI, pickers, subject form
+context/AppContext   App state, saving, reminder scheduling, theme
+lib/                 Attendance / GPA / date logic, storage, notifications
+```
 
-No internet connection required
+Built with Expo SDK 54, React Native, Expo Router, AsyncStorage and expo-notifications (local only).
 
-Export/Import backup functionality
+## License
 
-🐛 Troubleshooting
-Common Issues
-Metro bundler errors
-
-bash
-npx expo start -c
-Node modules issues
-
-bash
-rm -rf node_modules package-lock.json
-npm install
-iOS specific issues (Mac only)
-
-bash
-cd ios && pod install && cd ..
-Clear all app data
-
-Go to Profile → Clear All Data
-
-📈 Roadmap
-Cloud sync and backup
-
-Push notifications for reminders
-
-Widget support
-
-More chart types and insights
-
-Social sharing features
-
-Custom themes
-
-Voice input for ideas
-
-Task collaboration
-
-📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+[MIT](LICENSE) © Abhinav Ashutosh
