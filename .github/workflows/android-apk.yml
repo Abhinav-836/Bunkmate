@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
 
@@ -31,9 +31,18 @@ jobs:
         run: npx expo prebuild --platform android --no-install
 
       # Only 64-bit ARM: every phone from the last ~6 years. Roughly halves build time.
+      # Skips Android Lint ("lintVital…"): it re-checks every library's code, takes a
+      # large share of the build and ran Gradle out of memory. The app's own code is
+      # still checked by npm test / tsc / expo lint in the other workflow.
+      # Gradle gets 4 GB (the generated default is 2 GB heap / 512 MB metaspace;
+      # the runner has 16 GB).
       - name: Build release APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+        run: >-
+          ./gradlew assembleRelease --no-daemon
+          -PreactNativeArchitectures=arm64-v8a
+          -x lintVitalRelease
+          "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
