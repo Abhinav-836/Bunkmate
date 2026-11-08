@@ -27,14 +27,10 @@ Everything stays on your phone. No account, no ads, works offline.
 - Mark yesterday's or older classes from the Today screen, add extra classes that aren't on the timetable, and see the full history with delete.
 - Percentages are floored, never rounded up, so 74.9% is never shown as 75%.
 
-- **What-if planner:** see your percentage if you skip or attend the next *N* classes.
-- Per-subject target (50-100%), plus a starting count for when you begin mid-semester.
-- Mark yesterday's or older classes from the Today screen, add extra classes that aren't on the timetable, and see the full history with delete.
-- Percentages are floored, never rounded up, so 74.9% is never shown as 75%.
-
 **Timetable**
 - Weekly schedule from Monday to Saturday (Sunday optional), with lectures, labs and tutorials, rooms and clash warnings.
 - Add the same class to several days at once.
+- **Share with your class:** tap Share on the Timetable tab and send the message to your class group. Classmates paste it under Import and get every subject and class in one go. The message holds only subjects and classes (no attendance, deadlines or grades), and works without an account or internet server. Subjects with the same name and code are matched to ones you already have, so your attendance carries on.
 - **Reminders before every class** (5, 10, 15 or 30 minutes, or off).
 
 **Deadlines**
@@ -63,16 +59,24 @@ Scan the QR code with Expo Go (Android) or the Camera app (iOS). Press `w` to op
 
 ### Build an APK
 
+The **Android APK** workflow builds one on every push to `main` (Actions tab → latest run → `bunkmate-apk`). Or build it yourself:
+
 ```bash
 npm install -g eas-cli
 eas login
 eas build -p android --profile preview
 ```
 
+### Updates without reinstalling
+
+Installed apps get JavaScript changes over the air: the **Update installed apps** workflow publishes each push to `main` with EAS Update, and phones download it the next time the app opens (it applies on the launch after). It needs an `EXPO_TOKEN` repository secret (expo.dev → Account settings → Access tokens).
+
+Updates only reach apps built with the same `version` in `app.json` (the runtime version). When you add or upgrade a package with native code, bump `version` and install the new APK; apps on the old version stop receiving updates instead of crashing.
+
 ## Checks
 
 ```bash
-npm test           # attendance maths, CGPA and date logic
+npm test           # attendance maths, CGPA, dates and timetable sharing
 npm run typecheck  # TypeScript
 npm run lint
 ```
@@ -97,10 +101,10 @@ app/
   settings.tsx       Reminders, target, theme, backup
 components/          Shared UI, pickers, subject form
 context/AppContext   App state, saving, reminder scheduling, theme
-lib/                 Attendance / GPA / date logic, storage, notifications
+lib/                 Attendance / GPA / date logic, timetable sharing, storage, notifications
 ```
 
-Built with Expo SDK 54, React Native, Expo Router, AsyncStorage and expo-notifications (local only).
+Built with Expo SDK 54, React Native, Expo Router, AsyncStorage, expo-notifications (local only) and expo-updates.
 
 ## License
 

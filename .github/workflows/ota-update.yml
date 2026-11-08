@@ -1,0 +1,60 @@
+name: Update installed apps
+
+# Sends JavaScript changes straight to phones that already have the app
+# (an over-the-air update): no new APK needed. Phones download it the next
+# time the app opens and use it from the launch after that.
+#
+# Needs the EXPO_TOKEN secret (expo.dev → Account settings → Access tokens).
+# Without it this workflow only runs the checks.
+#
+# Updates only reach APKs with the same runtime version (the "version" in
+# app.json). When you add or upgrade a package with native code, bump that
+# version and install the new APK from the "Android APK" workflow: phones on
+# the old version then simply stop receiving updates instead of crashing.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ota-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Checks
+        run: |
+          npm test
+          npx tsc --noEmit
+          npx expo lint
+
+      - name: Set up EAS
+        if: env.EXPO_TOKEN != ''
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish the update
+        if: env.EXPO_TOKEN != ''
+        run: eas update --channel production --platform android --message "${{ github.event.head_commit.message || 'Manual update' }}" --non-interactive
+
+      - name: No EXPO_TOKEN
+        if: env.EXPO_TOKEN == ''
+        run: echo "::notice::Checks passed. Add the EXPO_TOKEN secret to send this change to installed apps."

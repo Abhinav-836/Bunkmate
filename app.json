@@ -2,7 +2,7 @@
   "expo": {
     "name": "Bunkmate",
     "slug": "mindgrid",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "bunkmate",
@@ -57,6 +57,17 @@
         "projectId": "7584466d-af84-4520-b359-d743c75e0e79"
       }
     },
-    "owner": "abhinav123456s"
+    "owner": "abhinav123456s",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7584466d-af84-4520-b359-d743c75e0e79",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      }
+    }
   }
 }

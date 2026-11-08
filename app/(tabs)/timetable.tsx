@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SubjectPicker, TimePicker } from '@/components/pickers';
 import { Button, Card, Chip, Empty, Field, Icon, IconButton, Label, Row, Screen, Sheet, Wrap } from '@/components/ui';
 import { useApp } from '@/context/AppContext';
 import { Radius, Spacing, Type } from '@/constants/theme';
 import { confirmAction, notify } from '@/lib/confirm';
+import { applyImport, decodeTimetable, describe, shareMessage, type ImportMode, type SharedTimetable } from '@/lib/share';
 import { WEEKDAY_LONG, WEEKDAY_SHORT, formatTime12, fromMinutes, isoWeekday, toMinutes } from '@/lib/dates';
 import type { ClassKind, ID, Slot, Weekday } from '@/lib/types';
 
@@ -15,13 +16,68 @@ const KINDS: ClassKind[] = ['lecture', 'lab', 'tutorial'];
 
 export default function TimetableScreen() {
   const router = useRouter();
-  const { data, colors, saveSlot, deleteSlot, enableReminders } = useApp();
+  const { data, colors, saveSlot, deleteSlot, enableReminders, replaceAll } = useApp();
   const days: Weekday[] = [1, 2, 3, 4, 5];
   if (data.settings.showSaturday) days.push(6);
   if (data.settings.showSunday) days.push(7);
   const todayIso = isoWeekday();
   const [day, setDay] = useState<Weekday>(days.includes(todayIso) ? todayIso : 1);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [pasted, setPasted] = useState('');
+  const [preview, setPreview] = useState<SharedTimetable | null>(null);
+  const [importError, setImportError] = useState('');
+
+  const shareTimetable = async () => {
+    if (data.slots.length === 0) return notify('Nothing to share yet', 'Add your classes first, then share them with your class.');
+    try {
+      await Share.share({ message: shareMessage(data) });
+    } catch {
+      notify("Couldn't open sharing", 'Try again.');
+    }
+  };
+
+  const closeImport = () => {
+    setImporting(false);
+    setPasted('');
+    setPreview(null);
+    setImportError('');
+  };
+
+  const onPaste = (text: string) => {
+    setPasted(text);
+    setImportError('');
+    if (!text.trim()) return setPreview(null);
+    try {
+      setPreview(decodeTimetable(text));
+    } catch (e) {
+      setPreview(null);
+      // Only complain once something code-like is there, not while they're still typing
+      if (/BUNK1\./.test(text) || text.length > 40) setImportError((e as Error).message);
+    }
+  };
+
+  const runImport = (mode: ImportMode) => {
+    if (!preview) return;
+    const result = applyImport(data, preview, mode);
+    replaceAll(result.data);
+    closeImport();
+    const parts = [
+      `${result.classesAdded} class${result.classesAdded === 1 ? '' : 'es'} added`,
+      result.newSubjects ? `${result.newSubjects} new subject${result.newSubjects === 1 ? '' : 's'}` : null,
+      result.reusedSubjects ? `${result.reusedSubjects} matched your existing subjects (attendance kept)` : null,
+    ].filter(Boolean);
+    if (result.classesAdded === 0 && result.newSubjects === 0) {
+      notify('Nothing new', 'You already have every subject and class in that timetable.');
+      return;
+    }
+    notify(
+      'Timetable imported',
+      `${parts.join(', ')}.` +
+        (result.newSubjects ? " If you're joining mid-semester, set each new subject's starting attendance on the Attendance tab." : ''),
+    );
+    if (data.slots.length === 0 && data.settings.classReminderMinutes > 0) setTimeout(enableReminders, 0);
+  };
 
   const subjects = new Map(data.subjects.map((s) => [s.id, s]));
   const slots = data.slots
@@ -96,14 +152,27 @@ export default function TimetableScreen() {
     <Screen
       title="Timetable"
       subtitle={data.settings.classReminderMinutes ? `Reminder ${data.settings.classReminderMinutes} min before each class` : 'Class reminders are off'}
-      action={data.subjects.length ? <IconButton icon="add" label="Add class" onPress={openNew} /> : undefined}>
+      action={
+        data.subjects.length ? (
+          <Row style={{ gap: Spacing.sm }}>
+            <IconButton icon="download" label="Import a timetable" onPress={() => setImporting(true)} />
+            <IconButton icon="share" label="Share timetable with your class" onPress={shareTimetable} />
+            <IconButton icon="add" label="Add class" onPress={openNew} />
+          </Row>
+        ) : undefined
+      }>
       {data.subjects.length === 0 ? (
         <Card>
           <Empty
             icon="calendar-view-week"
             title="Add subjects first"
-            body="Your timetable is built from your subjects. Add them on the Attendance tab."
-            action={<Button title="Go to Attendance" onPress={() => router.push('/attendance')} />}
+            body="Your timetable is built from your subjects. Add them on the Attendance tab — or, if a classmate already set up Bunkmate, import their timetable in one go."
+            action={
+              <View style={{ gap: Spacing.sm, alignSelf: 'stretch' }}>
+                <Button title="Import from a classmate" icon="download" onPress={() => setImporting(true)} />
+                <Button title="Go to Attendance" kind="ghost" onPress={() => router.push('/attendance')} />
+              </View>
+            }
           />
         </Card>
       ) : (
@@ -163,6 +232,45 @@ export default function TimetableScreen() {
           )}
         </>
       )}
+
+      <Sheet visible={importing} title="Import a timetable" onClose={closeImport}>
+        <Text style={[Type.body, { color: colors.textSecondary, marginBottom: Spacing.md }]}>
+          Ask a classmate to tap Share on their Timetable tab, then copy the whole message they send and paste it here. Only
+          subjects and classes come across — never anyone&apos;s attendance.
+        </Text>
+        <Field
+          label="Paste the message"
+          placeholder="📅 Class timetable for Bunkmate… BUNK1.…"
+          value={pasted}
+          onChangeText={onPaste}
+          multiline
+          autoCorrect={false}
+          autoCapitalize="none"
+          style={{ maxHeight: 160 }}
+        />
+        {importError ? <Text style={[Type.small, { color: colors.danger, marginTop: -Spacing.sm, marginBottom: Spacing.md }]}>{importError}</Text> : null}
+        {preview ? (
+          <>
+            <Card style={{ marginBottom: Spacing.md }}>
+              <Text style={[Type.h3, { color: colors.text }]}>{describe(preview)}</Text>
+              <Text style={[Type.small, { color: colors.textSecondary, marginTop: 4 }]} numberOfLines={3}>
+                {preview.subjects.map((x) => x.name).join(' · ')}
+              </Text>
+            </Card>
+            {data.slots.length === 0 ? (
+              <Button title="Import timetable" icon="download" onPress={() => runImport('replace')} />
+            ) : (
+              <>
+                <Button title="Replace my timetable" onPress={() => runImport('replace')} />
+                <Button title="Add to my timetable" kind="ghost" style={{ marginTop: Spacing.sm }} onPress={() => runImport('add')} />
+                <Text style={[Type.tiny, { color: colors.textTertiary, marginTop: Spacing.sm }]}>
+                  Either way your attendance is kept. Subjects with the same name and code are matched to yours.
+                </Text>
+              </>
+            )}
+          </>
+        ) : null}
+      </Sheet>
 
       <Sheet visible={draft !== null} title={draft?.id ? 'Edit class' : 'Add class'} onClose={() => setDraft(null)}>
         {draft ? (
